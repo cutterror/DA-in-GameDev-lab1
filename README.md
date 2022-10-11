@@ -155,6 +155,75 @@ public class NewBehaviourScript : MonoBehaviour
 
 ```py
 
+import gspread
+import numpy as np
+import matplotlib.pyplot as plt
+
+gc = gspread.service_account(filename='unitydatasciense-365205-27e8e9c05cbd.json')
+sh = gc.open('UnityData')
+priceX = np.random.randint(2000, 10000, 11)
+priceX = np.array(priceX)
+priceY = np.random.randint(2000, 10000, 11)
+priceY = np.array(priceY)
+mon = list(range(1, 11))
+
+
+def model(a, b, x):
+  return a * x + b
+
+
+def loss_function(a, b, x, y):
+  num = len(x)
+  prediction = model(a, b, x)
+  return (0.5 / num) * (np.square(prediction - y)).sum()
+
+
+def optimize(a, b, x, y):
+  num = len(x)
+  prediction = model(a, b, x)
+  da = (1.0 / num) * ((prediction - y) * x).sum()
+  db = (1.0 / num) * (prediction - y).sum()
+  a = a - Lr * da
+  b = b - Lr * db
+  return a, b
+
+
+def iterate (a, b, x, y, times):
+  for i in range(times):
+    a, b = optimize(a, b, x, y)
+  return a, b
+
+
+x = [2, 11, 13, 16, 25, 36, 49, 56, 76, 84, 99]
+x = np.array(x)
+y = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+y = np.array(y)
+
+a = np.random.rand(1)
+b = np.random.rand(1)
+Lr = 0.000001
+
+a, b = iterate(a, b, priceX, priceY, 1)
+prediction = model(a, b, priceX)
+loss = loss_function(a, b, priceX, priceY)
+print(a, b, loss)
+plt.scatter(x, y)
+plt.plot(x, prediction)
+
+
+i = 0
+while i <= len(mon):
+    i += 1
+    if i == 0:
+        continue
+    else:
+        tempInf = ((prediction[i-1]-prediction[i-2])/prediction[i-2])*100
+        tempInf = str(tempInf)
+        tempInf = tempInf.replace('.', ',')
+        sh.sheet1.update(('A' + str(i)), str(i))
+        sh.sheet1.update(('B' + str(i)), str(prediction[i-1]//1))
+        sh.sheet1.update(('C' + str(i)), str(tempInf))
+        print(prediction)
 
 ```
 
